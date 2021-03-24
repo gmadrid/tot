@@ -1,0 +1,127 @@
+diff --git a/src/kv.rs b/src/kv.rs
+index 9f619f0..c03fee3 100644
+--- a/src/kv.rs
++++ b/src/kv.rs
+@@ -12,8 +12,8 @@ impl<'a> KV<'a> {
+     }
+ }
+ 
+-pub fn from_str(s: &str) -> KV {
+-    if let Some(index) = s.find(crate::SEPARATOR) {
++pub fn from_str<'a, 'b>(s: &'a str, separator: &'b str) -> KV<'a> {
++    if let Some(index) = s.find(separator) {
+         KV(&s[..index], &s[index + 1..])
+     } else {
+         let (a, b) = s.split_at(s.len());
+@@ -27,21 +27,21 @@ mod tests {
+ 
+     #[test]
+     fn test_simple() {
+-        let kv = from_str("foo:bar");
++        let kv = from_str("foo:bar", ":");
+         assert_eq!("foo", kv.0);
+         assert_eq!("bar", kv.1);
+     }
+ 
+     #[test]
+     fn test_empty_val() {
+-        let kv = from_str("foo:");
++        let kv = from_str("foo:", ":");
+         assert_eq!("foo", kv.0);
+         assert_eq!("", kv.1);
+     }
+ 
+     #[test]
+     fn test_no_separator() {
+-        let kv = from_str("foo");
++        let kv = from_str("foo", ":");
+         assert_eq!("foo", kv.0);
+         assert_eq!("", kv.1);
+     }
+diff --git a/src/lib.rs b/src/lib.rs
+index 1efaf34..e5cb1ef 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -2,7 +2,7 @@ mod chunker;
+ mod kv;
+ mod totter;
+ 
+-const SEPARATOR: char = ':';
++//const SEPARATOR: char = ':';
+ 
+ #[derive(Debug, thiserror::Error)]
+ pub enum Error {
+diff --git a/src/main.rs b/src/main.rs
+index 05a68a2..693d3e8 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -12,9 +12,10 @@ struct Args {
+     /// columns to be listed first in this order. "first,second,third"
+     order: String,
+ 
+-    // #[argh(option, default = "\":\".to_string()", short = 's')]
+-    // /// separator between the field name and the value in the input
+-    // input_separator: String,
++    #[argh(option, default = "\":\".to_string()", short = 's')]
++    /// separator between the field name and the value in the input
++    input_separator: String,
++
+     #[argh(option, default = "\"\\t\".to_string()", short = 'S')]
+     /// field separator used in the output
+     output_separator: String,
+@@ -30,10 +31,10 @@ struct Args {
+ 
+ type KeySet<'a> = HashSet<&'a str>;
+ 
+-fn get_input_records(path: &Path, trim: bool) -> Result<Records> {
++fn get_input_records(path: &Path, input_separator: &str, trim: bool) -> Result<Records> {
+     let f = std::fs::File::open(path)?;
+ 
+-    let tot = tot::Tot::read_from(f, trim)?;
++    let tot = tot::Tot::read_from(f, input_separator, trim)?;
+     tot.take_records()
+ }
+ 
+@@ -74,7 +75,7 @@ fn spew_records(keys: &[&str], records: &[Record], separator: &str) {
+ 
+ fn process() -> Result<()> {
+     let args = argh::from_env::<Args>();
+-    let recs = get_input_records(&args.filename, args.trim)?;
++    let recs = get_input_records(&args.filename, &args.input_separator, args.trim)?;
+     let all_key_set = get_all_key_names(&recs);
+     let first_keys = get_first_keys(&args.order);
+     let ordered_keys = get_ordered_keys(&first_keys, all_key_set);
+diff --git a/src/totter.rs b/src/totter.rs
+index 91f92d5..a5b6686 100644
+--- a/src/totter.rs
++++ b/src/totter.rs
+@@ -10,25 +10,25 @@ pub struct Tot {
+ }
+ 
+ impl Tot {
+-    pub fn read_from(read: impl Read, trim: bool) -> Result<Tot> {
++    pub fn read_from(read: impl Read, input_separator: &str, trim: bool) -> Result<Tot> {
+         let lines = BufReader::new(read).lines().flatten();
+ 
+         let chunks = crate::chunker::chunks_at_blanks(lines);
+         let mut records: Vec<Record> = Default::default();
+         for chunk in chunks {
+-            let record = Tot::record_from_chunk(chunk, trim);
++            let record = Tot::record_from_chunk(chunk, input_separator, trim);
+             records.push(record);
+         }
+         Ok(Tot { records })
+     }
+ 
+-    fn record_from_chunk<I>(chunk: I, trim: bool) -> Record
++    fn record_from_chunk<I>(chunk: I, input_separator: &str, trim: bool) -> Record
+     where
+         I: Iterator<Item = String>,
+     {
+         let mut record = Record::default();
+         for line in chunk {
+-            let kv = from_str(&line);
++            let kv = from_str(&line, input_separator);
+             let value = if trim { kv.value().trim() } else { kv.value() };
+             record.insert(kv.key().to_string(), value.to_string());
+         }

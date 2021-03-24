@@ -12,9 +12,10 @@ struct Args {
     /// columns to be listed first in this order. "first,second,third"
     order: String,
 
-    // #[argh(option, default = "\":\".to_string()", short = 's')]
-    // /// separator between the field name and the value in the input
-    // input_separator: String,
+    #[argh(option, default = "\":\".to_string()", short = 's')]
+    /// separator between the field name and the value in the input
+    input_separator: String,
+
     #[argh(option, default = "\"\\t\".to_string()", short = 'S')]
     /// field separator used in the output
     output_separator: String,
@@ -30,10 +31,10 @@ struct Args {
 
 type KeySet<'a> = HashSet<&'a str>;
 
-fn get_input_records(path: &Path, trim: bool) -> Result<Records> {
+fn get_input_records(path: &Path, input_separator: &str, trim: bool) -> Result<Records> {
     let f = std::fs::File::open(path)?;
 
-    let tot = tot::Tot::read_from(f, trim)?;
+    let tot = tot::Tot::read_from(f, input_separator, trim)?;
     tot.take_records()
 }
 
@@ -45,7 +46,11 @@ fn get_all_key_names(recs: &[Record]) -> KeySet {
 }
 
 fn get_first_keys(list: &str) -> Vec<&str> {
-    list.split(',').collect()
+    if list.is_empty() {
+        Default::default()
+    } else {
+        list.split(',').collect()
+    }
 }
 
 fn get_ordered_keys<'a>(first: &[&'a str], mut unordered: KeySet<'a>) -> Vec<&'a str> {
@@ -74,7 +79,7 @@ fn spew_records(keys: &[&str], records: &[Record], separator: &str) {
 
 fn process() -> Result<()> {
     let args = argh::from_env::<Args>();
-    let recs = get_input_records(&args.filename, args.trim)?;
+    let recs = get_input_records(&args.filename, &args.input_separator, args.trim)?;
     let all_key_set = get_all_key_names(&recs);
     let first_keys = get_first_keys(&args.order);
     let ordered_keys = get_ordered_keys(&first_keys, all_key_set);

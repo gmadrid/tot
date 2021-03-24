@@ -1,0 +1,6 @@
+shoe=nike
+glove=baseball
+pants=levis
+
+shoe=florsheim
+pants=khaki

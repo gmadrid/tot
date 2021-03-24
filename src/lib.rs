@@ -2,7 +2,7 @@ mod chunker;
 mod kv;
 mod totter;
 
-const SEPARATOR: char = ':';
+//const SEPARATOR: char = ':';
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

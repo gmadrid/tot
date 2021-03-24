@@ -12,8 +12,8 @@ impl<'a> KV<'a> {
     }
 }
 
-pub fn from_str(s: &str) -> KV {
-    if let Some(index) = s.find(crate::SEPARATOR) {
+pub fn from_str<'a, 'b>(s: &'a str, separator: &'b str) -> KV<'a> {
+    if let Some(index) = s.find(separator) {
         KV(&s[..index], &s[index + 1..])
     } else {
         let (a, b) = s.split_at(s.len());
@@ -27,21 +27,21 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let kv = from_str("foo:bar");
+        let kv = from_str("foo:bar", ":");
         assert_eq!("foo", kv.0);
         assert_eq!("bar", kv.1);
     }
 
     #[test]
     fn test_empty_val() {
-        let kv = from_str("foo:");
+        let kv = from_str("foo:", ":");
         assert_eq!("foo", kv.0);
         assert_eq!("", kv.1);
     }
 
     #[test]
     fn test_no_separator() {
-        let kv = from_str("foo");
+        let kv = from_str("foo", ":");
         assert_eq!("foo", kv.0);
         assert_eq!("", kv.1);
     }

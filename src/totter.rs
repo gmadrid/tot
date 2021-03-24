@@ -10,25 +10,25 @@ pub struct Tot {
 }
 
 impl Tot {
-    pub fn read_from(read: impl Read, trim: bool) -> Result<Tot> {
+    pub fn read_from(read: impl Read, input_separator: &str, trim: bool) -> Result<Tot> {
         let lines = BufReader::new(read).lines().flatten();
 
         let chunks = crate::chunker::chunks_at_blanks(lines);
         let mut records: Vec<Record> = Default::default();
         for chunk in chunks {
-            let record = Tot::record_from_chunk(chunk, trim);
+            let record = Tot::record_from_chunk(chunk, input_separator, trim);
             records.push(record);
         }
         Ok(Tot { records })
     }
 
-    fn record_from_chunk<I>(chunk: I, trim: bool) -> Record
+    fn record_from_chunk<I>(chunk: I, input_separator: &str, trim: bool) -> Record
     where
         I: Iterator<Item = String>,
     {
         let mut record = Record::default();
         for line in chunk {
-            let kv = from_str(&line);
+            let kv = from_str(&line, input_separator);
             let value = if trim { kv.value().trim() } else { kv.value() };
             record.insert(kv.key().to_string(), value.to_string());
         }
