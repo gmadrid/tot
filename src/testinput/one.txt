@@ -1,0 +1,10 @@
+name:John
+instrument:guitar
+glasses:round
+
+name:Paul
+instrument:guitar
+redbull:wings
+
+name:Ringo
+instrument:drums

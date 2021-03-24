@@ -1,0 +1,12 @@
+[package]
+name = "tot"
+version = "0.1.0"
+authors = ["George Madrid <gmadrid@gmail.com>"]
+edition = "2018"
+
+[lib]
+
+
+[dependencies]
+argh = "0.1.4"
+thiserror = "1.0.24"
