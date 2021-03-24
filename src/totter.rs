@@ -1,9 +1,8 @@
 use super::Result;
 use crate::kv::from_str;
+use crate::{Record, Records};
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Read};
-
-type Record = HashMap<String, String>;
 
 #[derive(Debug, Default)]
 pub struct Tot {
@@ -35,7 +34,7 @@ impl Tot {
         record
     }
 
-    pub fn take_records(self) -> Result<Vec<HashMap<String, String>>> {
+    pub fn take_records(self) -> Result<Records> {
         Ok(self.records)
     }
 }

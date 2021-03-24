@@ -9,4 +9,5 @@ edition = "2018"
 
 [dependencies]
 argh = "0.1.4"
+itertools = "0.10.0"
 thiserror = "1.0.24"
