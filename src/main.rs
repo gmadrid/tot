@@ -12,6 +12,16 @@ struct Args {
     /// columns to be listed first in this order. "first,second,third"
     order: String,
 
+    // #[argh(option, default = "\":\".to_string()", short = 's')]
+    // /// separator between the field name and the value in the input
+    // input_separator: String,
+    #[argh(option, default = "\"\\t\".to_string()", short = 'S')]
+    /// field separator used in the output
+    output_separator: String,
+
+    // #[argh(switch)]
+    // /// trim whitespace from beginning/end of values
+    // trim: bool,
     #[argh(positional)]
     /// the file to process. (Currently only a single file is allowed.)
     filename: PathBuf,
@@ -46,17 +56,17 @@ fn get_ordered_keys<'a>(first: &[&'a str], mut unordered: KeySet<'a>) -> Vec<&'a
     first.iter().chain(unordered.iter()).copied().collect()
 }
 
-fn spew_headers(keys: &[&str]) {
-    println!("{}", keys.iter().join("\t"));
+fn spew_headers(keys: &[&str], separator: &str) {
+    println!("{}", keys.iter().join(separator));
 }
 
-fn spew_records(keys: &[&str], records: &[Record]) {
+fn spew_records(keys: &[&str], records: &[Record], separator: &str) {
     for rec in records {
         println!(
             "{}",
             keys.iter()
                 .map(|k| { rec.get(*k).map(|v| v.as_str()).unwrap_or("") })
-                .join("\t")
+                .join(separator)
         );
     }
 }
@@ -68,8 +78,8 @@ fn process() -> Result<()> {
     let first_keys = get_first_keys(&args.order);
     let ordered_keys = get_ordered_keys(&first_keys, all_key_set);
 
-    spew_headers(&ordered_keys);
-    spew_records(&ordered_keys, &recs);
+    spew_headers(&ordered_keys, &args.output_separator);
+    spew_records(&ordered_keys, &recs, &args.output_separator);
 
     Ok(())
 }
