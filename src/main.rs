@@ -19,9 +19,10 @@ struct Args {
     /// field separator used in the output
     output_separator: String,
 
-    // #[argh(switch)]
-    // /// trim whitespace from beginning/end of values
-    // trim: bool,
+    #[argh(switch)]
+    /// trim whitespace from beginning/end of values
+    trim: bool,
+
     #[argh(positional)]
     /// the file to process. (Currently only a single file is allowed.)
     filename: PathBuf,
@@ -29,10 +30,10 @@ struct Args {
 
 type KeySet<'a> = HashSet<&'a str>;
 
-fn get_input_records(path: &Path) -> Result<Records> {
+fn get_input_records(path: &Path, trim: bool) -> Result<Records> {
     let f = std::fs::File::open(path)?;
 
-    let tot = tot::Tot::read_from(f)?;
+    let tot = tot::Tot::read_from(f, trim)?;
     tot.take_records()
 }
 
@@ -73,7 +74,7 @@ fn spew_records(keys: &[&str], records: &[Record], separator: &str) {
 
 fn process() -> Result<()> {
     let args = argh::from_env::<Args>();
-    let recs = get_input_records(&args.filename)?;
+    let recs = get_input_records(&args.filename, args.trim)?;
     let all_key_set = get_all_key_names(&recs);
     let first_keys = get_first_keys(&args.order);
     let ordered_keys = get_ordered_keys(&first_keys, all_key_set);

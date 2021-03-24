@@ -46,7 +46,7 @@ where
                     return Some(old_chunk.into_iter());
                 }
 
-                self.curr_chunk.push(line.trim().to_string());
+                self.curr_chunk.push(line.to_string());
             } else {
                 if !self.done && !self.curr_chunk.is_empty() {
                     let old_chunk = mem::take(&mut self.curr_chunk);
