@@ -3,7 +3,7 @@ use itertools::Itertools;
 use std::collections::HashSet;
 use std::iter::Extend;
 use std::path::{Path, PathBuf};
-use tot::{Record, Result};
+use tot::{Record, Records, Result};
 
 #[derive(FromArgs)]
 /// Convert tagged records to TAB-delimited.
@@ -19,7 +19,7 @@ struct Args {
 
 type KeySet<'a> = HashSet<&'a str>;
 
-fn get_input_records(path: &Path) -> Result<tot::Records> {
+fn get_input_records(path: &Path) -> Result<Records> {
     let f = std::fs::File::open(path)?;
 
     let tot = tot::Tot::read_from(f)?;
@@ -38,20 +38,12 @@ fn get_first_keys(list: &str) -> Vec<&str> {
 }
 
 fn get_ordered_keys<'a>(first: &[&'a str], mut unordered: KeySet<'a>) -> Vec<&'a str> {
-    let mut keys_in_order = Vec::default();
-
-    // Add the keys in the first list.
-    keys_in_order.extend(first.iter());
-
-    // Remove those first keys from the unordered list.
+    // Remove the first keys from the unordered list.
     first.iter().for_each(|k| {
         unordered.remove(k);
     });
 
-    // Now add the remaining unordered keys to the list.
-    keys_in_order.extend(unordered.iter());
-
-    keys_in_order
+    first.iter().chain(unordered.iter()).copied().collect()
 }
 
 fn spew_headers(keys: &[&str]) {
