@@ -11,8 +11,8 @@ pub struct Tot {
 
 impl Tot {
     pub fn read_from(read: impl Read) -> Result<Tot> {
-        let lines = BufReader::new(read).lines().flatten(); //.map(|s| s.as_str());
-                                                            //let foo: u8 = lines.next().unwrap();
+        let lines = BufReader::new(read).lines().flatten();
+
         let chunks = crate::chunker::chunks_at_blanks(lines);
         let mut records: Vec<Record> = Default::default();
         for chunk in chunks {

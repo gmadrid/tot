@@ -31,6 +31,9 @@ where
     type Item = ChunkIter;
 
     fn next(&mut self) -> Option<Self::Item> {
+        if self.done {
+            return None;
+        }
         loop {
             if let Some(line) = self.iter.next() {
                 if line.trim().is_empty() {
