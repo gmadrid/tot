@@ -38,8 +38,7 @@ struct Args {
 type KeySet<'a> = HashSet<&'a str>;
 
 fn get_input_records(instream: impl BufRead, input_separator: &str, trim: bool) -> Result<Records> {
-    let tot = tot::Tot::read_from(instream, input_separator, trim)?;
-    tot.take_records()
+    tot::read_records_from_chunks(instream, input_separator, trim)
 }
 
 fn get_all_key_names(recs: &[Record]) -> KeySet {

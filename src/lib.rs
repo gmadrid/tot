@@ -15,4 +15,4 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub type Record = std::collections::HashMap<String, String>;
 pub type Records = Vec<Record>;
 
-pub use totter::Tot;
+pub use totter::read_records_from_chunks;
