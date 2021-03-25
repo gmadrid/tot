@@ -79,6 +79,7 @@ fn spew_records(keys: &[&str], records: &[Record], separator: &str) {
 
 fn process() -> Result<()> {
     let args = argh::from_env::<Args>();
+
     let recs = get_input_records(&args.filename, &args.input_separator, args.trim)?;
     let all_key_set = get_all_key_names(&recs);
     let first_keys = get_first_keys(&args.order);

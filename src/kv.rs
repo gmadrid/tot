@@ -1,8 +1,8 @@
-pub struct KV<'a>(&'a str, &'a str);
+pub struct Kv<'a>(&'a str, &'a str);
 
-impl<'a> KV<'a> {}
+impl<'a> Kv<'a> {}
 
-impl<'a> KV<'a> {
+impl<'a> Kv<'a> {
     pub fn key(&self) -> &str {
         self.0
     }
@@ -12,12 +12,12 @@ impl<'a> KV<'a> {
     }
 }
 
-pub fn from_str<'a, 'b>(s: &'a str, separator: &'b str) -> KV<'a> {
+pub fn from_str<'a, 'b>(s: &'a str, separator: &'b str) -> Kv<'a> {
     if let Some(index) = s.find(separator) {
-        KV(&s[..index], &s[index + 1..])
+        Kv(&s[..index], &s[index + 1..])
     } else {
         let (a, b) = s.split_at(s.len());
-        KV(a, b)
+        Kv(a, b)
     }
 }
 
