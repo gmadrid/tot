@@ -1,8 +1,10 @@
 use argh::FromArgs;
 use itertools::Itertools;
 use std::collections::HashSet;
+use std::fs::File;
+use std::io::{self, BufRead, BufReader};
 use std::iter::Extend;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use tot::{Record, Records, Result};
 
 #[derive(FromArgs)]
@@ -26,15 +28,13 @@ struct Args {
 
     #[argh(positional)]
     /// the file to process. (Currently only a single file is allowed.)
-    filename: PathBuf,
+    filename: Option<PathBuf>,
 }
 
 type KeySet<'a> = HashSet<&'a str>;
 
-fn get_input_records(path: &Path, input_separator: &str, trim: bool) -> Result<Records> {
-    let f = std::fs::File::open(path)?;
-
-    let tot = tot::Tot::read_from(f, input_separator, trim)?;
+fn get_input_records(instream: impl BufRead, input_separator: &str, trim: bool) -> Result<Records> {
+    let tot = tot::Tot::read_from(instream, input_separator, trim)?;
     tot.take_records()
 }
 
@@ -77,10 +77,18 @@ fn spew_records(keys: &[&str], records: &[Record], separator: &str) {
     }
 }
 
+fn get_instream(filename: &Option<PathBuf>) -> Result<Box<dyn BufRead>> {
+    Ok(match filename {
+        None => Box::new(BufReader::new(io::stdin())),
+        Some(name) => Box::new(BufReader::new(File::open(name)?)),
+    })
+}
+
 fn process() -> Result<()> {
     let args = argh::from_env::<Args>();
 
-    let recs = get_input_records(&args.filename, &args.input_separator, args.trim)?;
+    let instream = get_instream(&args.filename)?;
+    let recs = get_input_records(instream, &args.input_separator, args.trim)?;
     let all_key_set = get_all_key_names(&recs);
     let first_keys = get_first_keys(&args.order);
     let ordered_keys = get_ordered_keys(&first_keys, all_key_set);
