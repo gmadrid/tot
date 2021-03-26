@@ -2,21 +2,17 @@ use std::mem;
 
 type ChunkIter = std::vec::IntoIter<String>;
 
-pub struct Chunker<I>
-where
-    I: Iterator<Item = String>,
-{
+pub struct Chunker<I> {
+    test: &'static dyn Fn(&str) -> bool,
     iter: I,
     curr_chunk: Vec<String>,
     done: bool,
 }
 
-impl<I> Chunker<I>
-where
-    I: Iterator<Item = String>,
-{
-    pub fn new(iter: I) -> Chunker<I> {
+impl<I> Chunker<I> {
+    pub fn with_test(iter: I, test: &'static dyn Fn(&str) -> bool) -> Chunker<I> {
         Chunker {
+            test,
             iter,
             curr_chunk: Default::default(),
             done: false,
@@ -36,22 +32,20 @@ where
         }
         loop {
             if let Some(line) = self.iter.next() {
-                if line.trim().is_empty() {
+                if (self.test)(&line) {
                     // an empty line will return the current chunk, or if there is nothing in the
                     // current chunk, just continue
                     if self.curr_chunk.is_empty() {
                         continue;
                     }
-                    let old_chunk = mem::take(&mut self.curr_chunk);
-                    return Some(old_chunk.into_iter());
+                    return Some(mem::take(&mut self.curr_chunk).into_iter());
                 }
 
                 self.curr_chunk.push(line.to_string());
             } else {
                 if !self.done && !self.curr_chunk.is_empty() {
-                    let old_chunk = mem::take(&mut self.curr_chunk);
                     self.done = true;
-                    return Some(old_chunk.into_iter());
+                    return Some(mem::take(&mut self.curr_chunk).into_iter());
                 }
                 return None;
             }
@@ -59,11 +53,18 @@ where
     }
 }
 
+pub fn chunks_with_test<I>(iter: I, test: &'static dyn Fn(&str) -> bool) -> Chunker<I>
+where
+    I: Iterator<Item = String>,
+{
+    Chunker::with_test(iter, test)
+}
+
 pub fn chunks_at_blanks<I>(iter: I) -> Chunker<I>
 where
     I: Iterator<Item = String>,
 {
-    Chunker::new(iter)
+    chunks_with_test(iter, &|s| s.trim().is_empty())
 }
 
 // #[cfg(test)]
