@@ -1,7 +1,5 @@
 pub struct Kv<'a>(&'a str, &'a str);
 
-impl<'a> Kv<'a> {}
-
 impl<'a> Kv<'a> {
     pub fn key(&self) -> &str {
         self.0
