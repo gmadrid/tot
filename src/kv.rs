@@ -1,3 +1,22 @@
+pub struct KvParser<'a> {
+    separator: &'a str,
+}
+
+impl<'a> KvParser<'a> {
+    pub fn with_separator(separator: &str) -> KvParser {
+        KvParser { separator }
+    }
+
+    pub fn parse<'b>(&self, s: &'b str) -> Kv<'b> {
+        if let Some(index) = s.find(self.separator) {
+            Kv(&s[..index], &s[index + 1..])
+        } else {
+            let (a, b) = s.split_at(s.len());
+            Kv(a, b)
+        }
+    }
+}
+
 pub struct Kv<'a>(&'a str, &'a str);
 
 impl<'a> Kv<'a> {
@@ -7,15 +26,6 @@ impl<'a> Kv<'a> {
 
     pub fn value(&self) -> &str {
         self.1
-    }
-}
-
-pub fn from_str<'a, 'b>(s: &'a str, separator: &'b str) -> Kv<'a> {
-    if let Some(index) = s.find(separator) {
-        Kv(&s[..index], &s[index + 1..])
-    } else {
-        let (a, b) = s.split_at(s.len());
-        Kv(a, b)
     }
 }
 
