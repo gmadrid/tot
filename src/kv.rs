@@ -1,14 +1,12 @@
-pub struct KvParser<'a> {
-    separator: &'a str,
-}
+pub struct KvParser<'a>(&'a str);
 
 impl<'a> KvParser<'a> {
     pub fn with_separator(separator: &str) -> KvParser {
-        KvParser { separator }
+        KvParser(separator)
     }
 
     pub fn parse<'b>(&self, s: &'b str) -> Kv<'b> {
-        if let Some(index) = s.find(self.separator) {
+        if let Some(index) = s.find(self.0) {
             Kv(&s[..index], &s[index + 1..])
         } else {
             let (a, b) = s.split_at(s.len());
@@ -33,23 +31,27 @@ impl<'a> Kv<'a> {
 mod tests {
     use super::*;
 
+    fn parse_one<'a, 'b>(s: &'a str, sep: &'b str) -> Kv<'a> {
+        KvParser::with_separator(sep).parse(s)
+    }
+
     #[test]
     fn test_simple() {
-        let kv = from_str("foo:bar", ":");
+        let kv = parse_one("foo:bar", ":");
         assert_eq!("foo", kv.0);
         assert_eq!("bar", kv.1);
     }
 
     #[test]
     fn test_empty_val() {
-        let kv = from_str("foo:", ":");
+        let kv = parse_one("foo:", ":");
         assert_eq!("foo", kv.0);
         assert_eq!("", kv.1);
     }
 
     #[test]
     fn test_no_separator() {
-        let kv = from_str("foo", ":");
+        let kv = parse_one("foo", ":");
         assert_eq!("foo", kv.0);
         assert_eq!("", kv.1);
     }
