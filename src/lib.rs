@@ -23,24 +23,19 @@ pub fn read_records_from_chunks(
 
     let lines = BufReader::new(read).lines().flatten();
 
-    let chunks = crate::chunker::chunks_at_blanks(lines);
-    let mut records: Vec<Record> = Default::default();
-    for chunk in chunks {
-        let record = record_from_chunk(chunk, &parser, trim);
-        records.push(record);
-    }
-    Ok(records)
+    Ok(crate::chunker::chunks_at_blanks(lines)
+        .map(|chunk| record_from_chunk(chunk, &parser, trim))
+        .collect())
 }
 
 fn record_from_chunk<I>(chunk: I, parser: &kv::KvParser, trim: bool) -> Record
 where
     I: Iterator<Item = String>,
 {
-    let mut record = Record::default();
-    for line in chunk {
+    chunk.fold(Record::default(), |mut record, line| {
         let kv = parser.parse(&line);
         let value = if trim { kv.value().trim() } else { kv.value() };
         record.insert(kv.key().to_string(), value.to_string());
-    }
-    record
+        record
+    })
 }
