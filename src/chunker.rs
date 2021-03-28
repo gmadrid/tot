@@ -31,6 +31,8 @@ where
             return None;
         }
         loop {
+            // Read lines from the input into the "current chunk".
+            // When the test passes or we run out of lines, we return an Iterator into the Vec.
             if let Some(line) = self.iter.next() {
                 if (self.test)(&line) {
                     // an empty line will return the current chunk, or if there is nothing in the
