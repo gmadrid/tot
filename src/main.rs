@@ -5,7 +5,7 @@ use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 use std::iter::Extend;
 use std::path::PathBuf;
-use tot::{Record, Records, Result};
+use tot::{Record, Records};
 
 #[derive(FromArgs)]
 /// Convert tagged records to TAB-delimited.
@@ -37,7 +37,7 @@ struct Args {
 
 type KeySet<'a> = HashSet<&'a str>;
 
-fn get_input_records(instream: impl BufRead, input_separator: &str, trim: bool) -> Result<Records> {
+fn get_input_records(instream: impl BufRead, input_separator: &str, trim: bool) -> tot::Result<Records> {
     tot::read_records_from_chunks(instream, input_separator, trim)
 }
 
@@ -65,7 +65,7 @@ fn get_ordered_keys<'a>(first: &[&'a str], mut unordered: KeySet<'a>) -> Vec<&'a
     first.iter().chain(unordered.iter()).copied().collect()
 }
 
-fn spew_headers(outstream: &mut impl Write, keys: &[&str], separator: &str) -> Result<()> {
+fn spew_headers(outstream: &mut impl Write, keys: &[&str], separator: &str) -> tot::Result<()> {
     writeln!(outstream, "{}", keys.iter().join(separator))?;
     Ok(())
 }
@@ -75,7 +75,7 @@ fn spew_records(
     keys: &[&str],
     records: &[Record],
     separator: &str,
-) -> Result<()> {
+) -> tot::Result<()> {
     for rec in records {
         writeln!(
             outstream,
@@ -88,21 +88,21 @@ fn spew_records(
     Ok(())
 }
 
-fn get_instream(filename: &Option<PathBuf>) -> Result<Box<dyn BufRead>> {
+fn get_instream(filename: &Option<PathBuf>) -> tot::Result<Box<dyn BufRead>> {
     Ok(match filename {
         None => Box::new(BufReader::new(io::stdin())),
         Some(name) => Box::new(BufReader::new(File::open(name)?)),
     })
 }
 
-fn get_outstream(filename: &Option<PathBuf>) -> Result<Box<dyn io::Write>> {
+fn get_outstream(filename: &Option<PathBuf>) -> tot::Result<Box<dyn io::Write>> {
     Ok(match filename {
         None => Box::new(io::stdout()),
         Some(name) => Box::new(File::create(name)?),
     })
 }
 
-fn process() -> Result<()> {
+fn process() -> tot::Result<()> {
     let args = argh::from_env::<Args>();
 
     let instream = get_instream(&args.filename)?;
